@@ -1,10 +1,15 @@
 package com.rcszh.nettydemo.tcp;
 
+import com.rcszh.nettydemo.tcp.decoder.JsonDecoder;
 import com.rcszh.nettydemo.tcp.handler.TcpServerHandler;
 import com.rcszh.nettydemo.tcp.handler.TcpBinaryLoggingHandler;
 import com.rcszh.nettydemo.tcp.codec.AutoProtocolSwitchingDecoder;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
@@ -54,12 +59,19 @@ public class TcpServerInitializer extends ChannelInitializer<SocketChannel> {
                     // 不做分包/解码，直接把 ByteBuf 交给二进制处理器（常用于二进制协议）。
                     .addLast(binaryHandler);
 
-            case JSON_OBJECT -> ch.pipeline()
-                    // JSON 流分包：从 TCP 字节流中识别完整 JSON 对象/数组。
-                    .addLast(new JsonObjectDecoder(properties.getMaxFrameLength()))
-                    .addLast(new StringDecoder(CharsetUtil.UTF_8))
-                    .addLast(new StringEncoder(CharsetUtil.UTF_8))
-                    .addLast(handler);
+            case JSON_OBJECT -> {
+                String delimiterStr = "";
+
+                ch.pipeline()
+                        // JSON 流分包：从 TCP 字节流中识别完整 JSON 对象/数组。
+//                    .addLast(new JsonObjectDecoder(properties.getMaxFrameLength()))
+//                     .addLast(new StringDecoder(CharsetUtil.UTF_8))
+//                    .addLast(new StringEncoder(CharsetUtil.UTF_8))
+                        .addLast(new JsonDecoder(properties.getMaxFrameLength()))
+
+                        .addLast(handler);
+            }
+
 
             case LINE -> ch.pipeline()
                     // 按换行分包（\\n/\\r\\n）。

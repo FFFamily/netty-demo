@@ -62,7 +62,8 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        log.info("TCP 连接建立：远端={}", remote(ctx));
+        log.info("=========TCP 连接建立=================");
+        log.info("远端 {}", remote(ctx));
         ensureJsonState(ctx);
     }
 
@@ -71,7 +72,7 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        log.info("TCP 连接断开：远端={}", remote(ctx));
+        log.info("======TCP 连接断开：远端={}=======", remote(ctx));
     }
 
     /**
@@ -136,13 +137,10 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
             return;
         }
 
-        log.info("TCP 收到消息：远端={} 字节数={} 内容={}", remote(ctx), bytes, safeSnippet(msg));
-        try {
-            TcpRequest req = objectMapper.readValue(msg, TcpRequest.class);
-            onParsedRequest(ctx, req);
-        } catch (Exception e) {
-            onJsonParseError(ctx, msg, e);
-        }
+        log.info("TCP 收到消息");
+        log.info("远端={}", remote(ctx));
+        log.info("字节数={} ",bytes);
+        log.info("内容： {}",safeSnippet(msg));
     }
 
     /**
@@ -179,7 +177,7 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
             // 无分包流里出现非法 JSON 时，无法可靠定位边界；关闭连接更清晰。
             log.warn("TCP JSON 字节流解析失败，关闭连接：远端={} 异常={}",
                     remote(ctx), exceptionLabel(e));
-            log.debug("TCP JSON 字节流解析异常详情：远端={}", remote(ctx), e);
+            log.warn("TCP JSON 字节流解析异常详情：远端={}", remote(ctx), e);
             ctx.close();
         }
     }
